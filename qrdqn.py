@@ -144,13 +144,9 @@ class Worker():
                 for k in range(N):
                     action_now[i][j][k] = action[i][j]
                     action_next[i][j][k] = action_[i][j]
-        #print 'ba', action
-        #print 'bc', action_
-        #print 'now', action_now
-        #print 'next', action_next
+
         q_target = sess.run(self.local_AC.q_action, feed_dict={self.local_AC.inputs:np.vstack(next_observations),
                                                                 self.local_AC.actions_q:action_next})
-        #print 'q_target', q_target
         """
         q_target_batch = []
         for i in range(len(rewards)):
@@ -158,8 +154,6 @@ class Worker():
         q_target_batch = np.array(q_target_batch)
         #print 'q_target_batch', q_target_batch
         """
-        #print rewards
-        #q_target_batch = q_target * gamma + rewards
         q_target_batch = []
         for i in range(len(q_target)):
             qi = q_target[i]
@@ -168,13 +162,12 @@ class Worker():
                 z_target_step.append(gamma * qi[j] + rewards[i])
             q_target_batch.append(z_target_step)
         q_target_batch = np.array(q_target_batch)
-        #print q_target_batch
+
         isweight = np.zeros((batch_size,N))
         for i in range(batch_size):
             for j in range(N):
                 isweight[i,j] = ISWeights[i]
-        #print ISWeights
-        #print isweight
+
         feed_dict = {self.local_AC.inputs:np.vstack(observations),
                      self.local_AC.actions_q:action_now,
                      self.local_AC.q_target:q_target_batch,
@@ -184,8 +177,6 @@ class Worker():
                                   self.local_AC.grad_norms,
                                   self.local_AC.var_norms,
                                   self.local_AC.apply_grads],feed_dict=feed_dict)
-        #print 'loss', l
-        #u = np.mean(u)
         return l/len(rollout), g_n, v_n, Q_target, u
 
     def work(self,gamma,sess,coord,saver):
@@ -199,7 +190,6 @@ class Worker():
         with sess.as_default(), sess.graph.as_default():
             while not coord.should_stop():
                 sess.run(self.update_local_ops)
-                #episode_buffer = []
                 episode_reward = 0
                 episode_step_count = 0
                 d = False
@@ -221,23 +211,18 @@ class Worker():
                         s1 = process_frame(s1)
                     else:
                         s1 = s
-                    #episode_buffer.append([s,a,r,s1,d])
                     self.replaymemory.add([s,a,r,s1,d])
                     episode_reward += r
                     s = s1                    
                     total_steps += 1
                     episode_step_count += 1
-                    #if len(episode_buffer) == batch_size and d != True:
                     if total_steps % 10 == 0 and d != True and total_steps > max_memory:
                         episode_buffer, tree_idx, ISWeights = self.replaymemory.sample(batch_size)
                         #print '1234',ISWeights
                         l,g_n,v_n,Q_target,u = self.train(episode_buffer,sess,gamma,ISWeights)
-                        #print u
                         u = np.mean(u,axis=1)
-                        #print tree_idx
-                        #print 'u',u
                         self.replaymemory.update_priorities(tree_idx,u)
-                        #episode_buffer = []
+
                         sess.run(self.update_local_ops)
                     if d == True:
                         break
