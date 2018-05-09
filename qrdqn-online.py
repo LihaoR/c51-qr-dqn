@@ -134,13 +134,9 @@ class Worker():
                 for k in range(N):
                     action_now[i][j][k] = action[i][j]
                     action_next[i][j][k] = action_[i][j]
-        #print 'ba', action
-        #print 'bc', action_
-        #print 'now', action_now
-        #print 'next', action_next
+
         q_target = sess.run(self.local_AC.q_action, feed_dict={self.local_AC.inputs:np.vstack(next_observations),
                                                                 self.local_AC.actions_q:action_next})
-        #print 'q_target', q_target
         q_1 = q_target[-1]
         q_target_batch = []
         for reward in rewards[::-1]:
@@ -148,27 +144,15 @@ class Worker():
             q_target_batch.append(q_1)
         q_target_batch.reverse()
         q_target_batch = np.array(q_target_batch)
-        #print 'q_target_batch', q_target_batch
-        #print q_target_batch[2131312]
+
         feed_dict = {self.local_AC.inputs:np.vstack(observations),
                      self.local_AC.actions_q:action_now,
                      self.local_AC.q_target:q_target_batch}
-        l,g_n,v_n,_,delta,l1,l2,u,q = sess.run([self.local_AC.loss,
+        l,g_n,v_n,_ = sess.run([self.local_AC.loss,
                                 self.local_AC.grad_norms,
                                 self.local_AC.var_norms,
-                                self.local_AC.apply_grads,
-                                self.local_AC.delta,
-                                self.local_AC.loss1,
-                                self.local_AC.loss2,
-                                self.local_AC.u,
-                                self.local_AC.q_action],
+                                self.local_AC.apply_grads],
                                 feed_dict=feed_dict)
-        #print 'q', q
-        #print 'u', u
-        #print 'delta',delta,np.shape(delta)
-        #print 'l1',l1
-        #print 'l2',l2
-        #print 'loss', l
         return l/len(rollout), g_n, v_n, Q_target
 
     def work(self,gamma,sess,coord,saver):
