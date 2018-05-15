@@ -1,11 +1,11 @@
-# qr-dqn
+# Quantile Regression DQN and C51 DQN
 
-I'm trying to use quantile huber loss in the future
+In pong, qr-dqn will be convergence in 5000000 time-steps with 16 actors. About 2 times faster than c51.
 
-now I use n-steps return, and MSE.
+I use MSE for qr-dqn.
+The offline training one is almost like rainbow.
 
-and now it's much better than c51, in pong, it will be convergence in 5000000 time-steps
+Segment tree and replay memory are modified version and the original code is from tusimple
 
-the offline training one is almost like rainbow.
-
-segment tree and replay memory are modified version and the original code is from tusimple
+### To do
+I'm trying to use quantile huber loss in the future.
