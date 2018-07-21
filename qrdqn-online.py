@@ -39,7 +39,7 @@ def normalized_columns_initializer(std=1.0):
         return tf.constant(out)
     return _initializer
 
-class AC_Network():
+class Q_Network():
     def __init__(self,s_size,a_size,scope,trainer):
         with tf.variable_scope(scope):
             #  quantile regression dqn
@@ -107,7 +107,7 @@ class Worker():
         self.episode_lengths = []
         self.episode_mean_values = []
         #Create the local copy of the network and the tensorflow op to copy global paramters to local network
-        self.local_AC = AC_Network(s_size, a_size, self.name, trainer)
+        self.local_net = Q_Network(s_size, a_size, self.name, trainer)
         self.update_local_ops = update_target_graph('global', self.name)
         self.env = env
         
@@ -119,7 +119,7 @@ class Worker():
         next_observations = rollout[:,3]
         dones             = rollout[:,4]
         
-        Q_target = sess.run(self.local_AC.Q, feed_dict={self.local_AC.inputs:np.vstack(next_observations)})
+        Q_target = sess.run(self.local_net.Q, feed_dict={self.local_net.inputs:np.vstack(next_observations)})
         actions_ = np.argmax(Q_target, axis=1)
         #print 'Q_target',Q_target
         action = np.zeros((batch_size, a_size))
@@ -135,8 +135,8 @@ class Worker():
                     action_now[i][j][k] = action[i][j]
                     action_next[i][j][k] = action_[i][j]
 
-        q_target = sess.run(self.local_AC.q_action, feed_dict={self.local_AC.inputs:np.vstack(next_observations),
-                                                                self.local_AC.actions_q:action_next})
+        q_target = sess.run(self.local_net.q_action, feed_dict={self.local_net.inputs:np.vstack(next_observations),
+                                                                self.local_net.actions_q:action_next})
         q_1 = q_target[-1]
         q_target_batch = []
         for reward in rewards[::-1]:
@@ -145,13 +145,13 @@ class Worker():
         q_target_batch.reverse()
         q_target_batch = np.array(q_target_batch)
 
-        feed_dict = {self.local_AC.inputs:np.vstack(observations),
-                     self.local_AC.actions_q:action_now,
-                     self.local_AC.q_target:q_target_batch}
-        l,g_n,v_n,_ = sess.run([self.local_AC.loss,
-                                self.local_AC.grad_norms,
-                                self.local_AC.var_norms,
-                                self.local_AC.apply_grads],
+        feed_dict = {self.local_net.inputs:np.vstack(observations),
+                     self.local_net.actions_q:action_now,
+                     self.local_net.q_target:q_target_batch}
+        l,g_n,v_n,_ = sess.run([self.local_net.loss,
+                                self.local_net.grad_norms,
+                                self.local_net.var_norms,
+                                self.local_net.apply_grads],
                                 feed_dict=feed_dict)
         return l/len(rollout), g_n, v_n, Q_target
 
@@ -176,7 +176,7 @@ class Worker():
                     GLOBAL_STEP += 1
                     #Take an action using probabilities from policy network output.
                     if random.random() > epsilon:
-                        a_dist_list = sess.run(self.local_AC.Q, feed_dict={self.local_AC.inputs:[s]})
+                        a_dist_list = sess.run(self.local_net.Q, feed_dict={self.local_net.inputs:[s]})
                         a_dist = a_dist_list[0]
                         a = np.argmax(a_dist)
                     else:
@@ -255,7 +255,7 @@ a_size = env.action_space.n
 batch_size = 10
 global_episodes = tf.Variable(0,dtype=tf.int32,name='global_episodes',trainable=False)
 trainer = tf.train.AdamOptimizer(learning_rate=0.00015)
-master_network = AC_Network(s_size,a_size,'global',None) # Generate global network
+master_network = Q_Network(s_size,a_size,'global',None) # Generate global network
 num_workers = 8 # Set workers ot number of available CPU threads
 workers = []
 # Create worker classes
