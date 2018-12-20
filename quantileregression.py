@@ -229,7 +229,7 @@ class Worker():
                     total_steps += 1
                     episode_step_count += 1
                     #if len(episode_buffer) == batch_size and d != True:
-                    if total_steps % 10 == 0 and d != True and total_steps > 50000:
+                    if total_steps % 1 == 0 and d != True and total_steps > 50000:
                         episode_buffer, tree_idx, ISWeights = self.replaymemory.sample(batch_size)
                         #print '1234',ISWeights
                         l,g_n,v_n,Q_target,u = self.train(episode_buffer,sess,gamma,ISWeights)
