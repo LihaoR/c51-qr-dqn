@@ -61,7 +61,7 @@ class AC_Network():
             self.conv3 = slim.conv2d(activation_fn=tf.nn.relu,
                                      inputs=self.conv2,num_outputs=64,
                                      kernel_size=[3,3],stride=[1,1],padding='VALID')
-            hidden = slim.fully_connected(slim.flatten(self.conv2),512,activation_fn=tf.nn.relu)
+            hidden = slim.fully_connected(slim.flatten(self.conv3),512,activation_fn=tf.nn.relu)
             self.out = slim.fully_connected(hidden, a_size*self.atoms,
                                              activation_fn=None,
                                              weights_initializer=normalized_columns_initializer(0.1),
