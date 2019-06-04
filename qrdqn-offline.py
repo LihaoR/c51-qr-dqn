@@ -202,7 +202,7 @@ class Worker():
                     if total_steps % 2 == 0 and d != True and total_steps > 50000:
                         episode_buffer, tree_idx, ISWeights = self.replaymemory.sample(batch_size)
                         l,g_n,v_n,Q_target,u = self.train(episode_buffer,sess,gamma,ISWeights)
-                        u = np.mean(u,axis=1)
+                        u = np.mean(u,axis=1) + 1e-6
                         self.replaymemory.update_priorities(tree_idx,u)
                         sess.run(self.update_local_ops)
                     if d == True:
