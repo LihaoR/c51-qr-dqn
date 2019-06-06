@@ -204,10 +204,10 @@ class Worker():
                         l,g_n,v_n,Q_target,u = self.train(episode_buffer,sess,gamma,ISWeights)
                         u = np.mean(u,axis=1) + 1e-6
                         self.replaymemory.update_priorities(tree_idx,u)
-                        sess.run(self.update_local_ops)
+                        #sess.run(self.update_local_ops)
                     if d == True:
                         break
-                    
+                sess.run(self.update_local_ops)
                 self.episode_rewards.append(episode_reward)
                 self.episode_lengths.append(episode_step_count)
 
