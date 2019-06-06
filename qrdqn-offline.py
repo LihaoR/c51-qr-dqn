@@ -220,7 +220,6 @@ class Worker():
                     
                     print ('loss', l, 'Qtargetmean', np.mean(Q_target))
                     #print 'p_target', p_target
-                    #print 'm', m
                     if episode_count % 100 == 0 and self.name == 'worker_0' and total_steps > 10000:
                         saver.save(sess,self.model_path+'/qr-dqn-'+str(episode_count)+'.cptk')
                         print ("Saved Model")
